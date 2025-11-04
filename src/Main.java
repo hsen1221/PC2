@@ -84,5 +84,20 @@ public class Main {
             System.exit(0);
         }
     }
+    public static void main(String[] args) {
+        System.out.println("Starting vault hacking race...");
 
+        Vault vault = new Vault();
+
+
+        AscendingHackerThread ascendingHacker = new AscendingHackerThread(vault);
+        DescendingHackerThread descendingHacker = new DescendingHackerThread(vault);
+        PoliceThread police = new PoliceThread();
+
+
+        ascendingHacker.start();
+        descendingHacker.start();
+        police.start();
+    }
 }
+
