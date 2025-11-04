@@ -1,6 +1,6 @@
 public class Main {
 
-    // Vault class to store the password
+
     static class Vault {
         private final int password;
 
@@ -18,6 +18,23 @@ public class Main {
                 e.printStackTrace();
             }
             return guess == this.password;
+        }
+
+        // New method for binary search hacker - provides feedback
+        public int checkPasswordWithFeedback(int guess) {
+            try {
+                Thread.sleep(5); // Simulate processing time
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if (guess == this.password) {
+                return 0; // Correct
+            } else if (guess < this.password) {
+                return -1; // Too low
+            } else {
+                return 1; // Too high
+            }
         }
     }
 
@@ -73,6 +90,48 @@ public class Main {
         }
     }
 
+    // #####NEW Binary Search Hacker
+    static class BinarySearchHackerThread extends HackerThread {
+        public BinarySearchHackerThread(Vault vault) {
+            super(vault);
+            this.setName("BinarySearchHackerThread");
+        }
+
+        @Override
+        public void run() {
+            int low = 0;
+            int high = 9999;
+            int attempts = 0;
+
+            while (low <= high) {
+                attempts++;
+                int guess = low + (high - low) / 2; // Middle point
+
+                System.out.println(this.getName() + " guessing: " + guess +
+                        " (range: " + low + "-" + high + ")");
+
+                int result = vault.checkPasswordWithFeedback(guess);
+
+                if (result == 0) {
+                    // Correct password found!
+                    System.out.println(this.getName() + ": Hacked the vault! Password is " + guess +
+                            " (found in " + attempts + " attempts)");
+                    System.exit(0);
+                } else if (result == -1) {
+                    // Password is higher than guess
+                    System.out.println(this.getName() + ": Password is higher than " + guess);
+                    low = guess + 1;
+                } else {
+                    // Password is lower than guess
+                    System.out.println(this.getName() + ": Password is lower than " + guess);
+                    high = guess - 1;
+                }
+            }
+
+            System.out.println(this.getName() + ": Failed to find password after " + attempts + " attempts");
+        }
+    }
+
     // Police thread that counts down
     static class PoliceThread extends Thread {
         @Override
@@ -94,17 +153,20 @@ public class Main {
     // Main method - program entry point
     public static void main(String[] args) {
         System.out.println("Starting vault hacking race...");
+        System.out.println("Now with 3 hackers: Ascending, Descending, and Binary Search!");
 
         Vault vault = new Vault();
 
         // Create threads
         AscendingHackerThread ascendingHacker = new AscendingHackerThread(vault);
         DescendingHackerThread descendingHacker = new DescendingHackerThread(vault);
+        BinarySearchHackerThread binaryHacker = new BinarySearchHackerThread(vault); // NEW
         PoliceThread police = new PoliceThread();
 
         // Start all threads
         ascendingHacker.start();
         descendingHacker.start();
+        binaryHacker.start(); // NEW
         police.start();
     }
 }
