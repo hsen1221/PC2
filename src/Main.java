@@ -1,5 +1,9 @@
 public class Main {
 
+    // Static counters for each hacker
+    static int ascendingAttempts = 0;
+    static int descendingAttempts = 0;
+    static int binaryAttempts = 0;
 
     static class Vault {
         private final int password;
@@ -64,11 +68,15 @@ public class Main {
         @Override
         public void run() {
             for (int guess = 0; guess <= 9999; guess++) {
+                ascendingAttempts++; // Count this attempt
                 if (vault.isCorrectPassword(guess)) {
                     System.out.println(this.getName() + ": Hacked the vault! Password is " + guess);
+                    printFinalStats();
                     System.exit(0);
                 }
             }
+            // If we reach here, hacker failed to find password
+            System.out.println(this.getName() + " failed after " + ascendingAttempts + " attempts");
         }
     }
 
@@ -82,15 +90,19 @@ public class Main {
         @Override
         public void run() {
             for (int guess = 9999; guess >= 0; guess--) {
+                descendingAttempts++; // Count this attempt
                 if (vault.isCorrectPassword(guess)) {
                     System.out.println(this.getName() + ": Hacked the vault! Password is " + guess);
+                    printFinalStats();
                     System.exit(0);
                 }
             }
+            // If we reach here, hacker failed to find password
+            System.out.println(this.getName() + " failed after " + descendingAttempts + " attempts");
         }
     }
 
-    // #####NEW Binary Search Hacker
+    // Binary Search Hacker
     static class BinarySearchHackerThread extends HackerThread {
         public BinarySearchHackerThread(Vault vault) {
             super(vault);
@@ -101,10 +113,11 @@ public class Main {
         public void run() {
             int low = 0;
             int high = 9999;
-            int attempts = 0;
+            int localAttempts = 0;
 
             while (low <= high) {
-                attempts++;
+                localAttempts++;
+                binaryAttempts = localAttempts; // Update global counter
                 int guess = low + (high - low) / 2; // Middle point
 
                 System.out.println(this.getName() + " guessing: " + guess +
@@ -115,7 +128,8 @@ public class Main {
                 if (result == 0) {
                     // Correct password found!
                     System.out.println(this.getName() + ": Hacked the vault! Password is " + guess +
-                            " (found in " + attempts + " attempts)");
+                            " (found in " + localAttempts + " attempts)");
+                    printFinalStats();
                     System.exit(0);
                 } else if (result == -1) {
                     // Password is higher than guess
@@ -128,7 +142,8 @@ public class Main {
                 }
             }
 
-            System.out.println(this.getName() + ": Failed to find password after " + attempts + " attempts");
+            System.out.println(this.getName() + ": Failed to find password after " + localAttempts + " attempts");
+            binaryAttempts = localAttempts;
         }
     }
 
@@ -146,8 +161,37 @@ public class Main {
             }
 
             System.out.println("Game over for you hackers");
+            printFinalStats();
             System.exit(0); // End program if police arrive
         }
+    }
+
+    // Method to print final statistics
+    public static void printFinalStats() {
+        System.out.println("\n=== FINAL STATISTICS ===");
+        System.out.println("Ascending Hacker attempts: " + ascendingAttempts);
+        System.out.println("Descending Hacker attempts: " + descendingAttempts);
+        System.out.println("Binary Search Hacker attempts: " + binaryAttempts);
+
+        // Calculate efficiency
+        int totalAttempts = ascendingAttempts + descendingAttempts + binaryAttempts;
+        System.out.println("Total attempts by all hackers: " + totalAttempts);
+
+        // Find most efficient hacker
+        String mostEfficient = "Binary Search Hacker";
+        int minAttempts = binaryAttempts;
+
+        if (ascendingAttempts > 0 && ascendingAttempts < minAttempts) {
+            mostEfficient = "Ascending Hacker";
+            minAttempts = ascendingAttempts;
+        }
+        if (descendingAttempts > 0 && descendingAttempts < minAttempts) {
+            mostEfficient = "Descending Hacker";
+            minAttempts = descendingAttempts;
+        }
+
+        System.out.println("Most efficient hacker: " + mostEfficient + " (" + minAttempts + " attempts)");
+        System.out.println("=======================\n");
     }
 
     // Main method - program entry point
@@ -160,13 +204,13 @@ public class Main {
         // Create threads
         AscendingHackerThread ascendingHacker = new AscendingHackerThread(vault);
         DescendingHackerThread descendingHacker = new DescendingHackerThread(vault);
-        BinarySearchHackerThread binaryHacker = new BinarySearchHackerThread(vault); // NEW
+        BinarySearchHackerThread binaryHacker = new BinarySearchHackerThread(vault);
         PoliceThread police = new PoliceThread();
 
         // Start all threads
         ascendingHacker.start();
         descendingHacker.start();
-        binaryHacker.start(); // NEW
+        binaryHacker.start();
         police.start();
     }
 }
