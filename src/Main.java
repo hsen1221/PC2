@@ -53,4 +53,20 @@ public class Main {
         }
     }
 
+    static class DescendingHackerThread extends HackerThread {
+        public DescendingHackerThread(Vault vault) {
+            super(vault);
+            this.setName("DescendingHackerThread");
+        }
+
+        @Override
+        public void run() {
+            for (int guess = 9999; guess >= 0; guess--) {
+                if (vault.isCorrectPassword(guess)) {
+                    System.out.println(this.getName() + ": Hacked the vault! Password is " + guess);
+                    System.exit(0);
+                }
+            }
+        }
+    }
 }
